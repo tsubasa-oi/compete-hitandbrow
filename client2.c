@@ -30,18 +30,16 @@ int main() {
     printf("接続しました。\n");
 
     do {
-        // ③C1:4桁のランダムな数値を入力する
+        // 4桁のランダムな数値を入力する
         printf("4桁の数値を入力してください：");
         scanf("%d", &guess);
 
         // 数値を文字列に変換して送信
         sprintf(buffer, "%d", guess);
         send(client_socket, buffer, strlen(buffer), 0);
-
+        
         // サーバーからの結果を受信
         recv(client_socket, buffer, BUFFER_SIZE, 0);
-
-        printf("処理できてます");
 
         // 受信したデータを表示
         printf("%s\n", buffer);

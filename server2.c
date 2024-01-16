@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 #include <pthread.h>
+#include <errno.h>
 
 #define PORT_NUMBER 12345
 #define BUFFER_SIZE 1024
@@ -19,8 +20,11 @@ int secondNum;
 int thirdNum;
 int forthNum;
 
+// クライアント番号を定義
+// int clientCount = 0;
+
 // ユーザーの入力を許可するかどうかを示すフラグ
-int isInputAllowed = 1;
+// int isInputAllowed = 1;
 // 排他制御 
 pthread_mutex_t mutex;
 
@@ -86,6 +90,9 @@ int main() {
         int client_socket = accept(server_socket, NULL, NULL);
         printf("新規のクライアントからの接続を受付しました。\n");
 
+        // クライアントの数を増やす
+        // clientCount++;
+
         // スレッドを使ってクライアントの処理を開始
         pthread_t thread_id;
         struct ClientData* client_data = (struct ClientData*)malloc(sizeof(struct ClientData));
@@ -96,7 +103,7 @@ int main() {
             exit(EXIT_FAILURE);
         }
 
-        // ノンブロッキング
+        // スレッドの終了を待たない（ノンブロッキング）
         pthread_detach(thread_id);
     }
 
@@ -125,11 +132,15 @@ void* handle_client(void* arg) {
     char buffer[BUFFER_SIZE];
 
     do {
-        // mutexをロック
-        pthread_mutex_lock(&mutex);
-
         // クライアント側からデータを受信
-        recv(client_socket, buffer, BUFFER_SIZE, 0);
+        if (recv(client_socket, buffer, BUFFER_SIZE, 0) == -1) {
+            perror("Error receiving data");
+            exit(EXIT_FAILURE);
+        }
+
+        // mutexをロック
+        printf("ミューテックスをロックします。\n");
+        pthread_mutex_lock(&mutex);
 
         // 受信したデータを整数に変換する
         sscanf(buffer, "%d", &inputNum);
@@ -187,6 +198,7 @@ void* handle_client(void* arg) {
 
         // mutexをアンロック
         pthread_mutex_unlock(&mutex);
+        printf("ミューテックスをアンロックします。\n");
 
     } while (hit != 4);  // クライアントが正解を送るまで繰り返す
 
